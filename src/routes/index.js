@@ -1,7 +1,7 @@
 const { Router } = require("express")
 var http = require("http")
 
-const Usuarios = require("../controller/index")
+const Usuarios = require("../controller/usuarios/index")
 
 const routes = new Router()
 // não permite essas solicitações: PUT e GET
@@ -15,5 +15,6 @@ routes.get("/api/db", (req, res) => {
 
 routes.post("/api/usuarios", Usuarios.store)
 routes.patch("/api/usuarios/:id", Usuarios.update)
+routes.get("/activate/:chave", Usuarios.activate)
 
 module.exports = { routes }
