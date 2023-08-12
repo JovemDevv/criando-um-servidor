@@ -1,6 +1,8 @@
 const { object, string, mixed } = require("yup")
 const { apiEndpoints } = require("../../api/index")
 const MailService = require("../../services/mail")
+const fs = require("fs")
+const { uploadFolder } = require("../../config/upload")
 
 const criarChave = (n, r="") => {
     while (n--) {
@@ -44,7 +46,7 @@ class Usuarios {
         req.body = {
             ...req.body, 
             usu_foto: "",
-            usu_chave: "",
+            usu_chave: usu_chave,
             usu_emailconfirmado: false,
             usu_cadastroativo: false,
             created_at: new Date(), 
@@ -95,6 +97,38 @@ class Usuarios {
         apiEndpoints.db.write()
 
         return res.status(200).send({ response: "Use activated"}).end
+    }
+
+    async uploadPhoto (req, res, next) {
+        const {id} = req.params
+        const avatar = req.file
+
+        let usuario = await apiEndpoints.db
+        .get("usuarios")
+        .find({id: parseInt(id, 10) })
+        .value()
+
+        if (!usuario) return res.st(400).send({ error: "id not found"}).end()
+
+        if (usuario.usu_foto !== "") {
+            try {
+                fs. unlinkSync(`${uploadFolder}/${usuario.usu_foto}`)
+            } catch (error) {
+                console.log(`Erro ao excluir o arquivo ${uploadFolder}/${usuario.usu_foto}`)
+            }
+        }
+
+        usuario.usu_foto = avatar.filename
+        usuario.usu_updatad_at = new Date()
+        apiEndpoints.db.write()
+
+        let output = Object.assign({}, usuario)
+        delete output.usu_senha
+
+        return res
+            .status(200)
+            .send({ ...output })
+            .end()
     }
 
 }
